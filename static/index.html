@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIPAA Medical Chatbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #e3f2fd;
+            font-family: 'Arial', sans-serif;
+        }
+        .chat-container {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+        }
+        .chat-box {
+            border-radius: 10px;
+            padding: 15px;
+            background: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .message img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .user-message {
+            justify-content: flex-end;
+            text-align: right;
+        }
+        .user-message img {
+            margin-left: 10px;
+            margin-right: 0;
+        }
+        .user-message .message-text {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 75%;
+        }
+        .bot-message .message-text {
+            background: #f1f1f1;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 75%;
+        }
+        .bot-message img {
+            background: #f1f1f1;
+            padding: 5px;
+            border-radius: 50%;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .form-control {
+            border-radius: 20px;
+            padding: 10px;
+        }
+        .send-btn {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .spinner-border {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-primary text-white">
+        <div class="container">
+            <a class="navbar-brand text-white" href="#">HIPAA Medical Chatbot</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4 chat-container">
+        <div class="chat-box p-3" id="chatBox">
+            <div class="message bot-message">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Bot">
+                <div class="message-text">👋 Hello! I am a HIPAA-compliant AI medical assistant. How can I assist you today?</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" class="form-control" id="userInput" placeholder="Type your medical question..." onkeypress="handleKeyPress(event)">
+            <button class="btn btn-primary send-btn" onclick="sendMessage()">➤</button>
+            <div class="spinner-border text-primary" id="loadingSpinner"></div>
+        </div>
+    </div>
+
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    
+        async function sendMessage() {
+            let userInput = $("#userInput").val().trim();
+            if (!userInput) {
+                alert("Please enter a medical question.");
+                return;
+            }
+    
+            let chatBox = $("#chatBox");
+            let loadingSpinner = $("#loadingSpinner");
+    
+            chatBox.append(`
+                <div class="message user-message">
+                    <div class="message-text">${userInput}</div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/2922/2922510.png" alt="User">
+                </div>
+            `);
+            $("#userInput").val("");
+            loadingSpinner.show();
+            chatBox.scrollTop(chatBox[0].scrollHeight);
+    
+            try {
+                let response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: userInput })
+                });
+    
+                let data = await response.json();
+                
+                // Convert **text** to <b>text</b> for bold effect
+                let formattedResponse = (data.response || "I'm sorry, I couldn't process your request.")
+                    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+    
+                chatBox.append(`
+                    <div class="message bot-message">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Bot">
+                        <div class="message-text" style="white-space: pre-wrap;">${formattedResponse}</div>
+                    </div>
+                `);
+    
+            } catch (error) {
+                chatBox.append(`
+                    <div class="message bot-message text-danger">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Bot">
+                        <div class="message-text">Error: Unable to get a response. Please try again.</div>
+                    </div>
+                `);
+            } finally {
+                loadingSpinner.hide();
+                chatBox.scrollTop(chatBox[0].scrollHeight);
+            }
+        }
+    </script>
+    
+</body>
+</html>
