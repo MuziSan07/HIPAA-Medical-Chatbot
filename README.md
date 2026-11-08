@@ -1,157 +1,144 @@
-**HIPAA-Compliant Medical Chatbot**
+# HIPAA-Aware Medical Chatbot
 
+A privacy-conscious medical **information** chatbot built with **FastAPI** and
+**LangChain + Groq**. It answers general medical questions through a clean
+Bootstrap chat UI, and is organised using the **Model-View-Controller (MVC)**
+pattern.
 
-**Description**
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-async-009688.svg)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-This project is a HIPAA-compliant medical chatbot that leverages the power of LangChain and Groq API to provide accurate and secure medical-related information. It ensures that personal health information (PHI) is not stored or mishandled, complying with HIPAA guidelines.
+---
 
-The backend is built using FastAPI, and the frontend is a responsive Bootstrap-based UI that allows users to interact with the chatbot by typing in their medical questions.
+## Important disclaimer
 
+> This project is for **educational and informational purposes only**. It is
+> **not** a medical device and does **not** provide diagnosis or treatment.
+>
+> It is **"HIPAA-aware"** — designed to minimise and never store personal health
+> information (PHI) — but it is **not a certified HIPAA-compliant system**. It
+> sends questions to a third-party model provider (Groq) and has no Business
+> Associate Agreement (BAA), authentication, or audit controls. **Do not enter
+> real PHI**, and always consult a qualified healthcare professional for personal
+> medical concerns.
 
-**Features:**
+---
 
-HIPAA Compliance: Provides medically accurate responses while ensuring the privacy and security of PHI.
+## Features
 
-User Interaction: Users can type their questions and receive responses based on the latest medical guidelines.
+- **Medical Q&A** through a single `/chat` endpoint.
+- **Privacy-conscious system prompt** — non-diagnostic, PHI-minimising.
+- **Standing disclaimer** returned with every API response and shown in the UI.
+- **Input validation** — question length limits via Pydantic.
+- **Explicit CORS allow-list** (never `*`).
+- **Responsive chat UI** with HTML output escaping to prevent injection.
 
-Frontend: A modern, responsive chat interface built with HTML, CSS, Bootstrap, and jQuery.
+---
 
-Backend: A FastAPI-based backend that uses the Groq API for medical responses, ensuring accuracy and security.
+## Architecture (MVC)
 
+| Layer | Responsibility | Files |
+|-------|----------------|-------|
+| **Model** | Data schemas and the LangChain/Groq domain logic | `app/models/schemas.py`, `app/models/chatbot_model.py` |
+| **View** | Response formatting and the frontend UI | `app/views/responses.py`, `app/views/static/index.html` |
+| **Controller** | HTTP routes wiring requests to model + view | `app/controllers/chat_controller.py` |
+| **App** | Factory, CORS, static mounting, config | `app/main.py`, `app/config.py` |
 
-**Tech Stack**
+```
+HIPAA-Medical-Chatbot/
+├── app/
+│   ├── main.py                     # App factory (uvicorn app.main:app)
+│   ├── config.py                   # Environment-driven settings
+│   ├── models/
+│   │   ├── schemas.py              # ChatRequest / ChatResponse
+│   │   └── chatbot_model.py        # LangChain chain + generate_answer()
+│   ├── views/
+│   │   ├── responses.py            # Response formatting + disclaimer
+│   │   └── static/
+│   │       └── index.html          # Frontend chat UI
+│   └── controllers/
+│       └── chat_controller.py      # Routes: GET / and POST /chat
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── LICENSE
+└── README.md
+```
 
-*Frontend*:
+---
 
-HTML
+## Getting started
 
-CSS (Bootstrap)
+### 1. Install
 
-JavaScript (jQuery)
+```bash
+git clone https://github.com/MuziSan07/HIPAA-Medical-Chatbot.git
+cd HIPAA-Medical-Chatbot
 
-*Backend:*
+python -m venv venv
+source venv/bin/activate        # On Windows: venv\Scripts\activate
 
-Python (FastAPI)
-
-LangChain (for GPT-powered chat)
-
-Groq API (for the model used in the chatbot)
-
-Uvicorn (ASGI server)
-
-
-*Other:*
-
-Dotenv for environment variables
-
-CORS Middleware for frontend-backend communication
-
-Static Files for serving frontend resources
-
-
-**Requirements**
-
-Python 3.7+
-
-Install required dependencies with the following command:
-
-```python
 pip install -r requirements.txt
 ```
 
-*Frontend:*
-Requires Bootstrap and jQuery which are loaded from CDNs.
+### 2. Configure
 
-*Environment Variables:*
-Create a .env file with the following content:
-
-```python
-GROQ_API_KEY=your_groq_api_key
+```bash
+cp .env.example .env
+# Edit .env and set your GROQ_API_KEY
 ```
 
-Replace your_groq_api_key with your actual Groq API key.
+Get a free API key at <https://console.groq.com/>.
 
+### 3. Run
 
-**Running the Application**
-
-*Backend:*
-
-Install dependencies:
-```python
-pip install -r requirements.txt
+```bash
+uvicorn app.main:app --reload
 ```
 
-Run the FastAPI server:
-```python
-uvicorn medical-chatbot:app --reload
+Then open <http://127.0.0.1:8000/> for the chat UI, or
+<http://127.0.0.1:8000/docs> for the interactive API docs.
+
+---
+
+## API reference
+
+### `POST /chat`
+
+Request:
+
+```json
+{ "question": "What are common symptoms of dehydration?" }
 ```
 
-This will start the FastAPI server at http://127.0.0.1:8000/.
-
-
-*Frontend:*
-The frontend files are served from the /static directory in the FastAPI app.
-
-Navigate to http://127.0.0.1:8000/ in your browser to access the chatbot interface.
-
-**API Endpoints**
-
-*POST /chat:*
-Request body:
+Response:
 
 ```json
 {
-  "question": "Your medical question here"
+  "response": "The chatbot's educational answer ...",
+  "disclaimer": "This chatbot provides general educational information only ..."
 }
 ```
 
-Response body:
+---
 
-```json
-{
-  "response": "The chatbot's response to your question"
-}
-```
+## Tech stack
 
-Structure of the Application
-```
-├── backend/
-│   ├── main.py              # FastAPI app with route and chatbot logic
-│   ├── .env                 # Environment variables (GROQ_API_KEY)
-│   ├── requirements.txt     # Python dependencies
-│   └── static/              # Frontend static files (HTML, CSS, JS)
-│       └── index.html       # Frontend chat UI
-├── frontend/                # Frontend files (included in 'static' folder)
-└── README.md                # Project Documentation
-```
+- **Backend:** FastAPI, Uvicorn
+- **LLM orchestration:** LangChain (`langchain-core`, `langchain-groq`)
+- **Model provider:** Groq (default: `llama-3.3-70b-versatile`)
+- **Frontend:** HTML, Bootstrap 5, jQuery (loaded from CDNs)
+- **Config:** python-dotenv
 
-**Frontend Overview**
-The frontend contains a simple chat interface that allows users to enter medical questions. Responses from the bot are displayed in the chat window, with each message from the user and bot styled accordingly. The interface is designed to be user-friendly and mobile-responsive.
+---
 
-The chat interface allows users to:
+## Future work
 
-Enter their questions in a text box.
+- Add authentication and per-user rate limiting on `/chat`.
+- Add automated tests (pytest) and CI.
+- Optional: self-hosted model to avoid sending data to third parties.
 
-View responses from the chatbot.
+## License
 
-Have the chat window scroll automatically as new messages appear.
-
-**Security and Privacy**
-The chatbot adheres to HIPAA guidelines.
-
-Personal health information (PHI) is not stored or processed. Only the input question is passed to the chatbot, and no personal details are retained.
-
-Responses are generated based on publicly available medical knowledge and are not intended for medical diagnosis or treatment.
-
-**Troubleshooting**
-Error: Unable to get a response.
-If you encounter an error stating that the response could not be fetched, ensure that your Groq API key is correct and that your server is running correctly.
-
-*CORS issues:*
-If the frontend cannot communicate with the backend, make sure that the CORS middleware is correctly set up in your FastAPI app.
-
-**License**
-This project is open-source and available under the MIT License.
-
-
-
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file.

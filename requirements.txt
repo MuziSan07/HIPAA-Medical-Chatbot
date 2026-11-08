@@ -1,10 +1,11 @@
-fastapi 
-uvicorn 
-requests 
-python-dotenv
-uvicorn
-python-dotenv
-langchain
-langchain_groq
+# Web framework
+fastapi
+uvicorn[standard]
 pydantic
-openai
+
+# LLM / LangChain
+langchain-core
+langchain-groq
+
+# Configuration
+python-dotenv
